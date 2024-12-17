@@ -1,0 +1,58 @@
+/* Comment this out to disable prints and save space */
+#define BLYNK_TEMPLATE_ID "TMPL6NjB7XYZ4"
+#define BLYNK_TEMPLATE_NAME "Temperature and Humdity monitor"
+#define BLYNK_AUTH_TOKEN "1ooxWzJqmoZpzjzY4qEtWmepPGqBs5H5"
+
+#define BLYNK_PRINT Serial
+
+#include <WiFi.h>
+#include <WiFiClient.h>
+#include <BlynkSimpleEsp32.h>
+#include <DHT.h>
+
+// Auth Token dari Blynk
+char auth[] = BLYNK_AUTH_TOKEN;
+
+// Kredensial WiFi
+char ssid[] = "iPhone XS";
+char pass[] = "1sampai0";
+
+#define DHTPIN 2          // Pin digital untuk DHT
+#define DHTTYPE DHT11     // Tipe sensor DHT11
+//#define DHTTYPE DHT22   // Jika pakai DHT22
+//#define DHTTYPE DHT21   // Jika pakai DHT21
+
+DHT dht(DHTPIN, DHTTYPE);
+BlynkTimer timer;
+
+// Fungsi untuk mengirim data sensor
+void sendSensor()
+{
+  float h = dht.readHumidity();
+  float t = dht.readTemperature(); // Celsius
+  
+  if (isnan(h) || isnan(t)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+  
+  // Kirim data ke Virtual Pin di Blynk
+  Blynk.virtualWrite(V1, h); // Virtual Pin V1 untuk kelembapan
+  Blynk.virtualWrite(V0, t); // Virtual Pin V0 untuk suhu
+}
+
+void setup()
+{
+  Serial.begin(115200);
+  Blynk.begin(auth, ssid, pass);
+  dht.begin();
+  
+  // Fungsi dijalankan setiap 1 detik
+  timer.setInterval(1000L, sendSensor);
+}
+
+void loop()
+{
+  Blynk.run();
+  timer.run();
+}
